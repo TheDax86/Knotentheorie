@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einführung in die Knotentheorie</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        accentBlue: '#38bdf8',
+                        accentPurple: '#a855f7',
+                        accentCyan: '#06b6d4',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js & OrbitControls CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Neon Glassmorphism effect */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+        }
+
+        .neon-border:hover {
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
+        }
+
+        .active-knot-card {
+            border-color: #38bdf8 !important;
+            background: rgba(30, 41, 59, 0.95);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Canvas Overlay Container */
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        @media (min-width: 1024px) {
+            #canvas-container {
+                height: 560px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Header Section -->
+    <header class="border-b border-slate-800 glass-panel sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-gradient-to-tr from-sky-500 to-purple-600 rounded-xl shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid font-bold text-2xl text-white fa-infinity"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight gradient-text">Einführung in die Knotentheorie</h1>
+                    <p class="text-xs sm:text-sm text-slate-400">Mathematische Erforschung von Schleifen im 3D-Raum</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Interaktiver 3D-Viewer aktiv</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow space-y-10">
+
+        <!-- Intro Banner -->
+        <section class="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800 relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <h2 class="text-2xl font-semibold text-white mb-3">Was ist ein mathematischer Knoten?</h2>
+            <p class="text-slate-300 leading-relaxed max-w-4xl text-sm sm:text-base">
+                In der Mathematik unterscheidet sich ein Knoten von dem Alltagsknoten in Ihren Schnürsenkeln: 
+                Ein <strong>mathematischer Knoten</strong> ist eine verformte, closed (geschlossene) eindimensionale Schleife im dreidimensionalen Raum 
+                <strong>ohne offene Enden</strong> und <strong>ohne Selbstüberschneidungen</strong>. Stellen Sie sich ein verknotetes Seil vor, dessen zwei Enden unlösbar miteinander verschmolzen wurden.
+            </p>
+        </section>
+
+        <!-- Main Interactive Layout Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            <!-- Left / Top Controls & Selection (Gallery) -->
+            <div class="lg:col-span-5 space-y-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-shapes text-sky-400"></i> Knoten-Galerie
+                    </h3>
+                    <span class="text-xs text-slate-400">Wählen Sie einen Knoten</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5" id="knot-gallery">
+                    <!-- Dynamic Buttons inserted by JS -->
+                </div>
+            </div>
+
+            <!-- Right / Center 3D Interactive Viewer & Quick Stats -->
+            <div class="lg:col-span-7 space-y-4">
+                
+                <!-- 3D Canvas Card -->
+                <div class="glass-panel rounded-2xl p-4 border border-slate-700/60 neon-border relative">
+                    
+                    <div id="canvas-container">
+                        <!-- Three.js Canvas appended here -->
+                        
+                        <!-- Overlay UI Controls -->
+                        <div class="absolute top-4 left-4 z-10 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-200">
+                            <span id="current-knot-name" class="font-bold text-sky-400">Unknoten</span> <span id="current-rolfsen" class="text-slate-400">(0₁)</span>
+                        </div>
+
+                        <div class="absolute top-4 right-4 z-10 flex gap-2">
+                            <button id="btn-toggle-rotation" title="Auto-Rotation umschalten" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 p-2 rounded-lg border border-slate-700 backdrop-blur-md transition-colors text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-sync animate-spin-slow" id="rotation-icon"></i>
+                                <span class="hidden sm:inline">Rotation</span>
+                            </button>
+                            <button id="btn-reset-view" title="Kamera zurücksetzen" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 p-2 rounded-lg border border-slate-700 backdrop-blur-md transition-colors text-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-compress"></i>
+                                <span class="hidden sm:inline">Reset</span>
+                            </button>
+                        </div>
+
+                        <div class="absolute bottom-4 left-4 right-4 z-10 pointer-events-none text-center">
+                            <span class="bg-slate-900/70 backdrop-blur-md text-slate-400 text-xs px-3 py-1 rounded-full border border-slate-800">
+                                <i class="fa-solid fa-hand-pointer mr-1"></i> Ziehen zum Drehen | Scrollen zum Zoomen
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Selected Knot Parametric Equation & Info Panel -->
+                    <div class="mt-4 p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                            <h4 class="text-sm font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-calculator text-purple-400"></i> Parametrische Gleichung
+                            </h4>
+                            <span class="text-xs text-slate-400 font-mono" id="knot-interval">Interval: t ∈ [0, 2π]</span>
+                        </div>
+                        <div id="equation-display" class="font-mono text-xs sm:text-sm text-sky-300 bg-slate-950/80 p-3 rounded-lg overflow-x-auto border border-slate-800">
+                            <!-- Equation rendered via JS -->
+                        </div>
+                        <p id="knot-description" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            <!-- Description rendered via JS -->
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="glass-panel p-3.5 rounded-xl border border-slate-800 text-center">
+                        <span class="text-xs text-slate-400 block mb-1">Rolfsen-Name</span>
+                        <span id="metric-rolfsen" class="text-lg font-bold text-sky-400 font-mono">0₁</span>
+                    </div>
+                    <div class="glass-panel p-3.5 rounded-xl border border-slate-800 text-center">
+                        <span class="text-xs text-slate-400 block mb-1">Kreuzungszahl c(K)</span>
+                        <span id="metric-crossing" class="text-lg font-bold text-purple-400 font-mono">0</span>
+                    </div>
+                    <div class="glass-panel p-3.5 rounded-xl border border-slate-800 text-center">
+                        <span class="text-xs text-slate-400 block mb-1">Chiralität</span>
+                        <span id="metric-chirality" class="text-xs font-semibold text-amber-300 mt-1 block">Achiral</span>
+                    </div>
+                    <div class="glass-panel p-3.5 rounded-xl border border-slate-800 text-center">
+                        <span class="text-xs text-slate-400 block mb-1">Knotentyp</span>
+                        <span id="metric-type" class="text-xs font-semibold text-emerald-400 mt-1 block">Trivial</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Educational Section: Knot Invariants -->
+        <section class="space-y-6 pt-6">
+            <div class="border-b border-slate-800 pb-4">
+                <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-square-root-variable text-purple-400"></i> Was sind Knoteninvarianten?
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">
+                    Zwei Knoten können unterschiedlich aussehen, aber mathematisch identisch sein. Invarianten helfen Mathematikern zu beweisen, ob sich zwei Knoten ineinander verformen lassen, ohne sie zu zerschneiden.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1: Crossing Number -->
+                <div class="glass-panel rounded-2xl p-6 border border-slate-800 hover:border-sky-500/50 transition-all">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold mb-4">
+                        1
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Kreuzungszahl $c(K)$</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        Die minimal mögliche Anzahl von Überkreuzungen, wenn der Knoten flach auf eine 2D-Ebene projiziert wird. Der Kleeblattknoten hat eine Kreuzungszahl von 3. Es gibt keinen echten Knoten mit weniger als 3 Kreuzungen.
+                    </p>
+                    <div class="text-xs bg-slate-900/60 p-2.5 rounded-lg text-slate-400 border border-slate-800">
+                        <strong class="text-slate-200">Beispiel:</strong> Unknoten = 0, Kleeblatt = 3, Achterknoten = 4.
+                    </div>
+                </div>
+
+                <!-- Card 2: Tricolorability -->
+                <div class="glass-panel rounded-2xl p-6 border border-slate-800 hover:border-purple-500/50 transition-all">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold mb-4">
+                        2
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Dreifärbbarkeit (Fox-Färbung)</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        Ein Knoten heißt 3-färbbar, wenn jeder durchgehende Strang der 2D-Projektion mit einer von 3 Farben eingefärbt werden kann, sodass an <em>jeder</em> Überkreuzung entweder <strong>alle 3 Farben</strong> oder <strong>nur 1 Farbe</strong> zusammentreffen (mindestens 2 Farben müssen genutzt werden).
+                    </p>
+                    <div class="text-xs bg-slate-900/60 p-2.5 rounded-lg text-slate-400 border border-slate-800">
+                        <strong class="text-slate-200">Eigenschaft:</strong> Der Kleeblattknoten ist 3-färbbar, der Unknoten und der Achterknoten hingegen nicht!
+                    </div>
+                </div>
+
+                <!-- Card 3: Polynomial Invariants -->
+                <div class="glass-panel rounded-2xl p-6 border border-slate-800 hover:border-cyan-500/50 transition-all">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold mb-4">
+                        3
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Polynom-Invarianten</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        Algebren ordnen Knoten algebraische Ausdrücke zu (z. B. das <strong>Alexander-Polynom</strong> oder <strong>Jones-Polynom</strong>). Diese wirken wie ein mathematischer „DNA-Fingerabdruck“.
+                    </p>
+                    <div class="text-xs bg-slate-900/60 p-2.5 rounded-lg text-slate-400 border border-slate-800">
+                        <strong class="text-slate-200">Bedeutung:</strong> Unterscheiden sich die Polynome zweier Knoten, sind sie garantiert nicht ineinander überführbar.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-6 mt-12 bg-slate-950 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>Interaktive Lernplattform Knotentheorie • Erstellt mit Three.js & Tailwind CSS</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- KNOT DATA DEFINITIONS ---
+        const KNOTS = [
+            {
+                id: 'unknot',
+                name: 'Unknoten',
+                altName: 'Trivialer Knoten',
+                rolfsen: '0₁',
+                crossingNumber: 0,
+                chirality: 'Achiral',
+                type: 'Trivialer Knoten',
+                tMax: Math.PI * 2,
+                tubularSegments: 128,
+                radius: 0.28,
+                radialSegments: 32,
+                scale: 2.2,
+                equation: `x(t) = 2 · cos(t)\ny(t) = 2 · sin(t)\nz(t) = 0`,
+                description: 'Der Unknoten (auch trivialer Knoten genannt) ist eine einfache, kreisförmige geschlossene Schleife ohne jegliche Überkreuzung oder Verdrillung.',
+                getPoint: function(t) {
+                    const r = 2.0;
+                    const x = r * Math.cos(t);
+                    const y = r * Math.sin(t);
+                    const z = 0;
+                    return new THREE.Vector3(x, y, z);
+                }
+            },
+            {
+                id: 'trefoil',
+                name: 'Kleeblattknoten',
+                altName: 'Trefoil Knot',
+                rolfsen: '3₁',
+                crossingNumber: 3,
+                chirality: 'Chiral (Händig)',
+                type: 'Torusknoten (3,2)',
+                tMax: Math.PI * 2,
+                tubularSegments: 180,
+                radius: 0.25,
+                radialSegments: 32,
+                scale: 1.1,
+                equation: `x(t) = sin(t) + 2 · sin(2t)\ny(t) = cos(t) - 2 · cos(2t)\nz(t) = -sin(3t)`,
+                description: 'Der Kleeblattknoten ist der einfachste echte (nicht-triviale) Knoten mit genau 3 Kreuzungen. Er ist chiral – seine Spiegelung kann nicht durch Drehung mit ihm zur Deckung gebracht werden.',
+                getPoint: function(t) {
+                    const x = Math.sin(t) + 2 * Math.sin(2 * t);
+                    const y = Math.cos(t) - 2 * Math.cos(2 * t);
+                    const z = -Math.sin(3 * t);
+                    return new THREE.Vector3(x, y, z);
+                }
+            },
+            {
+                id: 'figure8',
+                name: 'Achterknoten',
+                altName: 'Figure-Eight Knot',
+                rolfsen: '4₁',
+                crossingNumber: 4,
+                chirality: 'Amphichiral (Achiral)',
+                type: 'Alternierender Knoten',
+                tMax: Math.PI * 2,
+                tubularSegments: 200,
+                radius: 0.22,
+                radialSegments: 32,
+                scale: 1.25,
+                equation: `x(t) = (2 + cos(2t)) · cos(3t)\ny(t) = (2 + cos(2t)) · sin(3t)\nz(t) = sin(4t)`,
+                description: 'Der Achterknoten besitzt 4 Kreuzungen. Er ist amphichiral (amphicheiral), das bedeutet, er lässt sich durch stetige Verformung im Raum in sein eigenes Spiegelbild überführen.',
+                getPoint: function(t) {
+                    const x = (2 + Math.cos(2 * t)) * Math.cos(3 * t);
+                    const y = (2 + Math.cos(2 * t)) * Math.sin(3 * t);
+                    const z = Math.sin(4 * t);
+                    return new THREE.Vector3(x, y, z);
+                }
+            },
+            {
+                id: 'cinquefoil',
+                name: 'Cinquefoil Knoten',
+                altName: 'Fünf-Schleifen-Knoten',
+                rolfsen: '5₁',
+                crossingNumber: 5,
+                chirality: 'Chiral (Händig)',
+                type: 'Torusknoten (5,2)',
+                tMax: Math.PI * 4, // 0 to 4PI for 5/2 torus knot
+                tubularSegments: 250,
+                radius: 0.20,
+                radialSegments: 32,
+                scale: 1.2,
+                equation: `x(t) = (2 + cos(5t/2)) · cos(t)\ny(t) = (2 + cos(5t/2)) · sin(t)\nz(t) = sin(5t/2)   [t ∈ 0..4π]`,
+                description: 'Der Cinquefoil-Knoten (auch Seal of Solomon Knoten) besitzt eine 5-fache symmetrische Struktur und 5 Kreuzungen. Er gehört zur Familie der Torusknoten.',
+                getPoint: function(t) {
+                    const x = (2 + Math.cos(2.5 * t)) * Math.cos(t);
+                    const y = (2 + Math.cos(2.5 * t)) * Math.sin(t);
+                    const z = Math.sin(2.5 * t);
+                    return new THREE.Vector3(x, y, z);
+                }
+            }
+        ];
+
+        // --- THREE.JS SCENE SETUP ---
+        let scene, camera, renderer, controls;
+        let currentMesh = null;
+        let activeKnot = KNOTS[0];
+        let autoRotate = true;
+
+        const container = document.getElementById('canvas-container');
+
+        function initThreeJS() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a); // darkbg #0f172a
+
+            // Camera
+            const aspect = container.clientWidth / container.clientHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            camera.position.set(0, 0, 9);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Orbit Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 0.8;
+            controls.zoomSpeed = 1.0;
+
+            // Lighting Setup
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 1.2); // Neon Blue
+            dirLight1.position.set(5, 10, 7);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0xa855f7, 1.2); // Neon Purple
+            dirLight2.position.set(-5, -10, -7);
+            scene.add(dirLight2);
+
+            const pointLight = new THREE.PointLight(0x06b6d4, 1.5, 20); // Cyan point glow
+            pointLight.position.set(0, 0, 3);
+            scene.add(pointLight);
+
+            // Build initial knot
+            renderKnot(activeKnot);
+
+            // Resize Observer
+            const resizeObserver = new ResizeObserver(() => {
+                if (!container) return;
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            });
+            resizeObserver.observe(container);
+
+            // Animation Loop
+            animate();
+        }
+
+        // --- RENDER KNOT FUNCTION ---
+        function renderKnot(knotData) {
+            if (currentMesh) {
+                scene.remove(currentMesh);
+                currentMesh.geometry.dispose();
+                currentMesh.material.dispose();
+            }
+
+            // Create custom Curve class for Three.js TubeGeometry
+            class CustomKnotCurve extends THREE.Curve {
+                constructor() {
+                    super();
+                }
+                getPoint(u, target = new THREE.Vector3()) {
+                    const t = u * knotData.tMax;
+                    const p = knotData.getPoint(t);
+                    return target.set(p.x, p.y, p.z);
+                }
+            }
+
+            const path = new CustomKnotCurve();
+            const geometry = new THREE.TubeGeometry(
+                path,
+                knotData.tubularSegments,
+                knotData.radius,
+                knotData.radialSegments,
+                true // closed loop
+            );
+
+            // Shader-like glossy metallic neon material
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x38bdf8,
+                roughness: 0.15,
+                metalness: 0.85,
+                emissive: 0x0f172a,
+                wireframe: false
+            });
+
+            currentMesh = new THREE.Mesh(geometry, material);
+            currentMesh.scale.set(knotData.scale, knotData.scale, knotData.scale);
+            scene.add(currentMesh);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (autoRotate && currentMesh) {
+                currentMesh.rotation.y += 0.008;
+                currentMesh.rotation.x += 0.004;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- UI & INTERACTION LOGIC ---
+        function populateGallery() {
+            const gallery = document.getElementById('knot-gallery');
+            gallery.innerHTML = '';
+
+            KNOTS.forEach((knot, index) => {
+                const btn = document.createElement('button');
+                btn.className = `glass-panel text-left p-4 rounded-xl border transition-all flex items-center justify-between group ${
+                    index === 0 ? 'active-knot-card' : 'border-slate-800 hover:border-slate-700'
+                }`;
+                btn.dataset.knotId = knot.id;
+
+                btn.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-white group-hover:text-sky-300 transition-colors">${knot.name}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-sky-400 font-mono font-semibold border border-slate-700">${knot.rolfsen}</span>
+                        </div>
+                        <p class="text-xs text-slate-400">${knot.altName}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block">Kreuzungen</span>
+                        <span class="text-sm font-bold text-purple-400 font-mono">${knot.crossingNumber}</span>
+                    </div>
+                `;
+
+                btn.addEventListener('click', () => {
+                    // Update active card styling
+                    document.querySelectorAll('#knot-gallery button').forEach(b => {
+                        b.classList.remove('active-knot-card');
+                        b.classList.add('border-slate-800');
+                    });
+                    btn.classList.add('active-knot-card');
+
+                    // Set active knot & re-render
+                    activeKnot = knot;
+                    renderKnot(activeKnot);
+                    updateKnotDetails(activeKnot);
+                });
+
+                gallery.appendChild(btn);
+            });
+        }
+
+        function updateKnotDetails(knot) {
+            document.getElementById('current-knot-name').textContent = knot.name;
+            document.getElementById('current-rolfsen').textContent = `(${knot.rolfsen})`;
+            document.getElementById('knot-interval').textContent = `t ∈ [0, ${knot.tMax === Math.PI * 4 ? '4π' : '2π'}]`;
+            document.getElementById('equation-display').textContent = knot.equation;
+            document.getElementById('knot-description').textContent = knot.description;
+
+            // Metrics Update
+            document.getElementById('metric-rolfsen').textContent = knot.rolfsen;
+            document.getElementById('metric-crossing').textContent = knot.crossingNumber;
+            document.getElementById('metric-chirality').textContent = knot.chirality;
+            document.getElementById('metric-type').textContent = knot.type;
+        }
+
+        // --- BUTTON EVENT LISTENERS ---
+        document.getElementById('btn-toggle-rotation').addEventListener('click', () => {
+            autoRotate = !autoRotate;
+            const icon = document.getElementById('rotation-icon');
+            if (autoRotate) {
+                icon.classList.add('animate-spin-slow');
+            } else {
+                icon.classList.remove('animate-spin-slow');
+            }
+        });
+
+        document.getElementById('btn-reset-view').addEventListener('click', () => {
+            camera.position.set(0, 0, 9);
+            controls.reset();
+            if (currentMesh) {
+                currentMesh.rotation.set(0, 0, 0);
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            populateGallery();
+            initThreeJS();
+            updateKnotDetails(KNOTS[0]);
+        });
+    </script>
+</body>
+</html>
